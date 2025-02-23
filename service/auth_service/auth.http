@@ -1,0 +1,27 @@
+### Hello
+GET http://127.0.0.1:10001/
+
+>>! http_response.json
+
+### Register
+POST http://127.0.0.1:10001/register
+Content-Type: application/json
+
+{
+    "email": "myEmail@gmail.com",
+    "password": "myPassword"
+}
+
+>>! http_response.json
+
+
+### login
+POST http://127.0.0.1:10001/login
+Content-Type: application/json
+
+{
+    "email": "myEmail@gmail.com",
+    "password": "myPassword"
+}
+
+>>! http_response.json
