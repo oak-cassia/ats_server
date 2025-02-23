@@ -38,16 +38,27 @@ func (s *AuthService) RegisterUser(email, password string) error {
 	}
 
 	user := &model.User{
-		Email:    email,
-		Password: string(hash),
+		Email:     email,
+		Password:  string(hash),
+		CreatedAt: time.Now(),
+		LastLogin: time.Now(),
 	}
-	return s.userRepo.CreateUser(user)
+	if err = s.userRepo.CreateUser(user); err != nil {
+		return errors.New("failed to create user")
+	}
+
+	return nil
 }
 
 func (s *AuthService) LoginUser(email, password string) (string, error) {
 	user, err := s.userRepo.GetUserByEmail(email)
 	if err != nil {
 		return "", errors.New("user not found")
+	}
+
+	user.LastLogin = time.Now()
+	if err = s.userRepo.UpdateLastLogin(user); err != nil {
+		return "", errors.New("failed to update last login")
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {

@@ -8,7 +8,7 @@ POST http://127.0.0.1:10001/register
 Content-Type: application/json
 
 {
-    "email": "myEmail@gmail.com",
+    "email": "myEmail1@gmail.com",
     "password": "myPassword"
 }
 
@@ -20,7 +20,7 @@ POST http://127.0.0.1:10001/login
 Content-Type: application/json
 
 {
-    "email": "myEmail@gmail.com",
+    "email": "myEmail1@gmail.com",
     "password": "myPassword"
 }
 

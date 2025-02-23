@@ -17,8 +17,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(user *model.User) error {
-	query := "INSERT INTO account (email, password) VALUES (?, ?)"
-	result, err := r.db.Exec(query, user.Email, user.Password)
+	query := "INSERT INTO account (email, password, created_at, last_login) VALUES (?, ?, ?, ?)"
+	result, err := r.db.Exec(query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
 	if err != nil {
 		return err
 	}
@@ -34,13 +34,21 @@ func (r *UserRepository) CreateUser(user *model.User) error {
 
 func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user model.User
-	query := "SELECT id, email, password FROM account WHERE email = ?"
-	err := r.db.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password)
+	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
+	err := r.db.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errors.New("failed to find user")
-	} else if err != nil {
-		return nil, err
 	}
 
 	return &user, nil
+}
+
+func (r *UserRepository) UpdateLastLogin(user *model.User) error {
+	query := "UPDATE account SET last_login = ? WHERE id = ?"
+	_, err := r.db.Exec(query, user.LastLogin, user.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
