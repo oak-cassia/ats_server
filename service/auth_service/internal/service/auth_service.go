@@ -2,7 +2,6 @@ package service
 
 import (
 	"auth_service/internal/model"
-	"auth_service/internal/repository"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -16,11 +15,11 @@ const tokenSize = 32
 const sessionExpire = 24 * time.Hour
 
 type AuthService struct {
-	userRepo    *repository.UserRepository
-	redisClient *redisclient.RedisClient
+	userRepo    UserRepository
+	redisClient RedisClient
 }
 
-func NewAuthService(ur *repository.UserRepository, rc *redisclient.RedisClient) AuthService {
+func NewAuthService(ur UserRepository, rc RedisClient) AuthService {
 	return AuthService{
 		userRepo:    ur,
 		redisClient: rc,
@@ -57,6 +56,10 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 		return "", errors.New("user not found")
 	}
 
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return "", errors.New("invalid password")
+	}
+
 	tx, err := s.userRepo.BeginTx()
 	if err != nil {
 		return "", errors.New("failed to begin transaction")
@@ -68,10 +71,6 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 	user.LastLogin = time.Now()
 	if err = s.userRepo.UpdateLastLoginTx(tx, user); err != nil {
 		return "", errors.New("failed to update last login")
-	}
-
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", errors.New("invalid password")
 	}
 
 	token := generateToken()
@@ -99,7 +98,7 @@ func generateToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func setSession(email, token string, rc *redisclient.RedisClient) error {
+func setSession(email, token string, rc RedisClient) error {
 	sk := redisclient.GetSessionKey(email)
 	return rc.SetData(sk, token, sessionExpire)
 }
