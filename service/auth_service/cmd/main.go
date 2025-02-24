@@ -44,7 +44,6 @@ func main() {
 	authService := service.NewAuthService(userRepo, cfg.Redis)
 	authHandler := handler.NewAuthHandler(authService)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("hi")) })
 	http.HandleFunc("/register", Chain(authHandler.RegisterHandler, Method(postMethod)))
 	http.HandleFunc("/login", Chain(authHandler.LoginHandler, Method(postMethod)))
 
