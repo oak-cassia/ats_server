@@ -16,6 +16,10 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	}
 }
 
+func (r *UserRepository) BeginTx() (*sql.Tx, error) {
+	return r.db.Begin()
+}
+
 func (r *UserRepository) CreateUser(user *model.User) error {
 	query := "INSERT INTO account (email, password, created_at, last_login) VALUES (?, ?, ?, ?)"
 	result, err := r.db.Exec(query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
@@ -43,12 +47,8 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateLastLogin(user *model.User) error {
+func (r *UserRepository) UpdateLastLoginTx(tx *sql.Tx, user *model.User) error {
 	query := "UPDATE account SET last_login = ? WHERE id = ?"
-	_, err := r.db.Exec(query, user.LastLogin, user.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := tx.Exec(query, user.LastLogin, user.ID)
+	return err
 }

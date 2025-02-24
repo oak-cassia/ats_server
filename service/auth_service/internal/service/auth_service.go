@@ -4,6 +4,7 @@ import (
 	"auth_service/internal/model"
 	"auth_service/internal/repository"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"golang.org/x/crypto/bcrypt"
@@ -56,8 +57,16 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 		return "", errors.New("user not found")
 	}
 
+	tx, err := s.userRepo.BeginTx()
+	if err != nil {
+		return "", errors.New("failed to begin transaction")
+	}
+	defer func(tx *sql.Tx) {
+		_ = tx.Rollback()
+	}(tx)
+
 	user.LastLogin = time.Now()
-	if err = s.userRepo.UpdateLastLogin(user); err != nil {
+	if err = s.userRepo.UpdateLastLoginTx(tx, user); err != nil {
 		return "", errors.New("failed to update last login")
 	}
 
@@ -72,6 +81,10 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 
 	if err = setSession(email, token, s.redisClient); err != nil {
 		return "", errors.New("failed to set session")
+	}
+
+	if err = tx.Commit(); err != nil {
+		return "", errors.New("failed to commit transaction")
 	}
 
 	return token, nil
