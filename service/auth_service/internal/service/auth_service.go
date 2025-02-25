@@ -85,6 +85,7 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 	}
 
 	if err = tx.Commit(); err != nil {
+		_ = s.deleteSession(email)
 		return "", errors.New("failed to commit transaction")
 	}
 
@@ -103,4 +104,9 @@ func generateToken() string {
 func setSession(email, token string, rc RedisClient) error {
 	sk := redisclient.GetSessionKey(email)
 	return rc.SetData(sk, token, sessionExpire)
+}
+
+func (s *AuthService) deleteSession(email string) error {
+	sk := redisclient.GetSessionKey(email)
+	return s.redisClient.DelData(sk)
 }
