@@ -14,4 +14,5 @@ type UserRepository interface {
 
 type RedisClient interface {
 	SetData(key, value string, expiration time.Duration) error
+	DelData(key string) error
 }
