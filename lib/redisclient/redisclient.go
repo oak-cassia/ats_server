@@ -37,6 +37,11 @@ func (r *RedisClient) GetData(key string) (string, error) {
 	return r.client.Get(ctx, key).Result()
 }
 
+func (r *RedisClient) DelData(key string) error {
+	ctx := context.Background()
+	return r.client.Del(ctx, key).Err()
+}
+
 func GetSessionKey(email string) string {
 	return "session:" + email
 }
