@@ -40,8 +40,8 @@ func main() {
 	}
 	defer cfg.Close()
 
-	userRepo := repository.NewUserRepository(cfg.DB)
-	authService := service.NewAuthService(userRepo, cfg.Redis)
+	userRepo := repository.NewUserRepository()
+	authService := service.NewAuthService(cfg.DB, userRepo, cfg.Redis)
 	authHandler := handler.NewAuthHandler(authService)
 
 	http.HandleFunc("/register", Chain(authHandler.RegisterHandler, Method(postMethod)))

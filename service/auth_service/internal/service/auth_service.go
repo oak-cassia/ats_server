@@ -15,19 +15,21 @@ const tokenSize = 32
 const sessionExpire = 24 * time.Hour
 
 type AuthService struct {
+	db          *sql.DB
 	userRepo    UserRepository
 	redisClient RedisClient
 }
 
-func NewAuthService(ur UserRepository, rc RedisClient) AuthService {
+func NewAuthService(db *sql.DB, ur UserRepository, rc RedisClient) AuthService {
 	return AuthService{
+		db:          db,
 		userRepo:    ur,
 		redisClient: rc,
 	}
 }
 
 func (s *AuthService) RegisterUser(email, password string) error {
-	existing, _ := s.userRepo.GetUserByEmail(email)
+	existing, _ := s.userRepo.GetUserByEmail(s.db, email)
 	if existing != nil {
 		return errors.New("user already exists")
 	}
@@ -43,7 +45,7 @@ func (s *AuthService) RegisterUser(email, password string) error {
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
-	if err = s.userRepo.CreateUser(user); err != nil {
+	if err = s.userRepo.CreateUser(s.db, user); err != nil {
 		return errors.New("failed to create user")
 	}
 
@@ -51,7 +53,7 @@ func (s *AuthService) RegisterUser(email, password string) error {
 }
 
 func (s *AuthService) LoginUser(email, password string) (string, error) {
-	user, err := s.userRepo.GetUserByEmail(email)
+	user, err := s.userRepo.GetUserByEmail(s.db, email)
 	if err != nil {
 		return "", errors.New("user not found")
 	}
@@ -60,7 +62,7 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 		return "", errors.New("invalid password")
 	}
 
-	tx, err := s.userRepo.BeginTx()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return "", errors.New("failed to begin transaction")
 	}
@@ -69,7 +71,7 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 	}(tx)
 
 	user.LastLogin = time.Now()
-	if err = s.userRepo.UpdateLastLoginTx(tx, user); err != nil {
+	if err = s.userRepo.UpdateLastLogin(tx, user); err != nil {
 		return "", errors.New("failed to update last login")
 	}
 
