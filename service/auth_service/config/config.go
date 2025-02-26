@@ -25,7 +25,7 @@ func (ac *AppConfig) Close() {
 func LoadConfig() (*AppConfig, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("error loading .env file")
 	}
 
 	db, err := mysqlConfig()

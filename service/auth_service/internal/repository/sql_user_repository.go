@@ -2,8 +2,6 @@ package repository
 
 import (
 	"auth_service/internal/model"
-	"database/sql"
-	"errors"
 )
 
 type SqlUserRepository struct{}
@@ -32,8 +30,8 @@ func (r *SqlUserRepository) GetUserByEmail(exec SQLExecutor, email string) (*mod
 	var user model.User
 	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
 	err := exec.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, errors.New("failed to find user")
+	if err != nil {
+		return nil, err
 	}
 
 	return &user, nil

@@ -20,7 +20,7 @@ func NewAuthHandler(authService service.AuthService) *AuthHandler {
 func (h *AuthHandler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 	req := &registerRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(rw, "Invalid request body", http.StatusBadRequest)
+		response.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -41,7 +41,7 @@ func (h *AuthHandler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
 	req := &loginRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(rw, "Invalid request body", http.StatusBadRequest)
+		response.Error(rw, "invalid request body", http.StatusBadRequest)
 		return
 	}
 

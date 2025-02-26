@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"errors"
+	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"redisclient"
 	"time"
@@ -31,7 +31,7 @@ func NewAuthService(db *sql.DB, ur UserRepository, rc RedisClient) AuthService {
 func (s *AuthService) RegisterUser(email, password string) error {
 	existing, _ := s.userRepo.GetUserByEmail(s.db, email)
 	if existing != nil {
-		return errors.New("user already exists")
+		return fmt.Errorf("user already exists")
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -46,7 +46,7 @@ func (s *AuthService) RegisterUser(email, password string) error {
 		LastLogin: time.Now(),
 	}
 	if err = s.userRepo.CreateUser(s.db, user); err != nil {
-		return errors.New("failed to create user")
+		return fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return nil
@@ -55,16 +55,16 @@ func (s *AuthService) RegisterUser(email, password string) error {
 func (s *AuthService) LoginUser(email, password string) (string, error) {
 	user, err := s.userRepo.GetUserByEmail(s.db, email)
 	if err != nil {
-		return "", errors.New("user not found")
+		return "", fmt.Errorf("user not found: %w", err)
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return "", errors.New("invalid password")
+		return "", fmt.Errorf("invalid password")
 	}
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return "", errors.New("failed to begin transaction")
+		return "", fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func(tx *sql.Tx) {
 		_ = tx.Rollback()
@@ -72,21 +72,21 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 
 	user.LastLogin = time.Now()
 	if err = s.userRepo.UpdateLastLogin(tx, user); err != nil {
-		return "", errors.New("failed to update last login")
+		return "", fmt.Errorf("failed to update last login: %w", err)
 	}
 
 	token := generateToken()
 	if token == "" {
-		return "", errors.New("failed to generate token")
+		return "", fmt.Errorf("failed to generate token")
 	}
 
 	if err = setSession(email, token, s.redisClient); err != nil {
-		return "", errors.New("failed to set session")
+		return "", fmt.Errorf("failed to set session: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
 		_ = s.deleteSession(email)
-		return "", errors.New("failed to commit transaction")
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return token, nil
