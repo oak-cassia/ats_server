@@ -40,7 +40,7 @@ func main() {
 	}
 	defer cfg.Close()
 
-	userRepo := repository.NewUserRepository()
+	userRepo := repository.NewSqlUserRepository()
 	authService := service.NewAuthService(cfg.DB, userRepo, cfg.Redis)
 	authHandler := handler.NewAuthHandler(authService)
 

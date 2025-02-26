@@ -6,13 +6,13 @@ import (
 	"errors"
 )
 
-type UserRepository struct{}
+type SqlUserRepository struct{}
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{}
+func NewSqlUserRepository() *SqlUserRepository {
+	return &SqlUserRepository{}
 }
 
-func (r *UserRepository) CreateUser(exec SQLExecutor, user *model.User) error {
+func (r *SqlUserRepository) CreateUser(exec SQLExecutor, user *model.User) error {
 	query := "INSERT INTO account (email, password, created_at, last_login) VALUES (?, ?, ?, ?)"
 	result, err := exec.Exec(query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
 	if err != nil {
@@ -28,7 +28,7 @@ func (r *UserRepository) CreateUser(exec SQLExecutor, user *model.User) error {
 	return nil
 }
 
-func (r *UserRepository) GetUserByEmail(exec SQLExecutor, email string) (*model.User, error) {
+func (r *SqlUserRepository) GetUserByEmail(exec SQLExecutor, email string) (*model.User, error) {
 	var user model.User
 	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
 	err := exec.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
@@ -39,7 +39,7 @@ func (r *UserRepository) GetUserByEmail(exec SQLExecutor, email string) (*model.
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateLastLogin(exec SQLExecutor, user *model.User) error {
+func (r *SqlUserRepository) UpdateLastLogin(exec SQLExecutor, user *model.User) error {
 	query := "UPDATE account SET last_login = ? WHERE id = ?"
 	_, err := exec.Exec(query, user.LastLogin, user.ID)
 	return err
