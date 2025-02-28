@@ -27,10 +27,10 @@ func Method(m string) Middleware {
 	}
 }
 
-func Timeout() Middleware {
+func Timeout(timeout time.Duration) Middleware {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(r.Context(), timeout)
 			defer cancel()
 			next(w, r.WithContext(ctx))
 		}
