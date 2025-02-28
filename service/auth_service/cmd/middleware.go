@@ -1,8 +1,19 @@
 package main
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+	"time"
+)
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
+
+func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
+	for _, m := range middlewares {
+		f = m(f)
+	}
+	return f
+}
 
 func Method(m string) Middleware {
 	return func(next http.HandlerFunc) http.HandlerFunc {
@@ -16,9 +27,13 @@ func Method(m string) Middleware {
 	}
 }
 
-func Chain(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
-	for _, m := range middlewares {
-		f = m(f)
+func Timeout() Middleware {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+			defer cancel()
+			r = r.WithContext(ctx)
+			next(w, r)
+		}
 	}
-	return f
 }
