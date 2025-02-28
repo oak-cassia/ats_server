@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 const port = 10001
@@ -24,8 +25,18 @@ func main() {
 	authService := service.NewAuthService(cfg.DB, userRepo, cfg.Redis)
 	authHandler := handler.NewAuthHandler(authService)
 
-	http.HandleFunc("/register", Chain(authHandler.RegisterHandler, Method(postMethod)))
-	http.HandleFunc("/login", Chain(authHandler.LoginHandler, Method(postMethod)))
+	http.HandleFunc("/register", Chain(
+		authHandler.RegisterHandler,
+		Method(postMethod),
+		Timeout(5*time.Second),
+		TimeNow(),
+	))
+	http.HandleFunc("/login", Chain(
+		authHandler.LoginHandler,
+		Method(postMethod),
+		Timeout(5*time.Second),
+		TimeNow(),
+	))
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }

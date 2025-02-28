@@ -2,6 +2,7 @@ package repository
 
 import (
 	"auth_service/internal/model"
+	"context"
 )
 
 type SqlUserRepository struct{}
@@ -10,9 +11,9 @@ func NewSqlUserRepository() *SqlUserRepository {
 	return &SqlUserRepository{}
 }
 
-func (r *SqlUserRepository) CreateUser(exec SQLExecutor, user *model.User) error {
+func (r *SqlUserRepository) CreateUser(ctx context.Context, exec SQLExecutor, user *model.User) error {
 	query := "INSERT INTO account (email, password, created_at, last_login) VALUES (?, ?, ?, ?)"
-	result, err := exec.Exec(query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
+	result, err := exec.ExecContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
 	if err != nil {
 		return err
 	}
@@ -26,10 +27,10 @@ func (r *SqlUserRepository) CreateUser(exec SQLExecutor, user *model.User) error
 	return nil
 }
 
-func (r *SqlUserRepository) GetUserByEmail(exec SQLExecutor, email string) (*model.User, error) {
+func (r *SqlUserRepository) GetUserByEmail(ctx context.Context, exec SQLExecutor, email string) (*model.User, error) {
 	var user model.User
 	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
-	err := exec.QueryRow(query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
+	err := exec.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +38,8 @@ func (r *SqlUserRepository) GetUserByEmail(exec SQLExecutor, email string) (*mod
 	return &user, nil
 }
 
-func (r *SqlUserRepository) UpdateLastLogin(exec SQLExecutor, user *model.User) error {
+func (r *SqlUserRepository) UpdateLastLogin(ctx context.Context, exec SQLExecutor, user *model.User) error {
 	query := "UPDATE account SET last_login = ? WHERE id = ?"
-	_, err := exec.Exec(query, user.LastLogin, user.ID)
+	_, err := exec.ExecContext(ctx, query, user.LastLogin, user.ID)
 	return err
 }

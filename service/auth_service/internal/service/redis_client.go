@@ -1,10 +1,11 @@
 package service
 
 import (
+	"context"
 	"time"
 )
 
 type RedisClient interface {
-	SetData(key, value string, expiration time.Duration) error
-	DelData(key string) error
+	SetData(ctx context.Context, key, value string, expiration time.Duration) error
+	DelData(ctx context.Context, key string) error
 }

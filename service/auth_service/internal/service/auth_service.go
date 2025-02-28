@@ -2,6 +2,7 @@ package service
 
 import (
 	"auth_service/internal/model"
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -28,8 +29,8 @@ func NewAuthService(db *sql.DB, ur UserRepository, rc RedisClient) AuthService {
 	}
 }
 
-func (s *AuthService) RegisterUser(email, password string) error {
-	existing, _ := s.userRepo.GetUserByEmail(s.db, email)
+func (s *AuthService) RegisterUser(ctx context.Context, email, password string) error {
+	existing, _ := s.userRepo.GetUserByEmail(ctx, s.db, email)
 	if existing != nil {
 		return fmt.Errorf("user already exists")
 	}
@@ -39,21 +40,26 @@ func (s *AuthService) RegisterUser(email, password string) error {
 		return err
 	}
 
+	now := ctx.Value("time" /* TODO ctx key package*/).(time.Time)
+	if now == (time.Time{}) {
+		now = time.Now()
+	}
+
 	user := &model.User{
 		Email:     email,
 		Password:  string(hash),
-		CreatedAt: time.Now(),
-		LastLogin: time.Now(),
+		CreatedAt: now,
+		LastLogin: now,
 	}
-	if err = s.userRepo.CreateUser(s.db, user); err != nil {
+	if err = s.userRepo.CreateUser(ctx, s.db, user); err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return nil
 }
 
-func (s *AuthService) LoginUser(email, password string) (string, error) {
-	user, err := s.userRepo.GetUserByEmail(s.db, email)
+func (s *AuthService) LoginUser(ctx context.Context, email, password string) (string, error) {
+	user, err := s.userRepo.GetUserByEmail(ctx, s.db, email)
 	if err != nil {
 		return "", fmt.Errorf("user not found: %w", err)
 	}
@@ -70,8 +76,13 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 		_ = tx.Rollback()
 	}(tx)
 
-	user.LastLogin = time.Now()
-	if err = s.userRepo.UpdateLastLogin(tx, user); err != nil {
+	now := ctx.Value("time" /* TODO ctx key package*/).(time.Time)
+	if now == (time.Time{}) {
+		now = time.Now()
+	}
+
+	user.LastLogin = now
+	if err = s.userRepo.UpdateLastLogin(ctx, tx, user); err != nil {
 		return "", fmt.Errorf("failed to update last login: %w", err)
 	}
 
@@ -80,12 +91,12 @@ func (s *AuthService) LoginUser(email, password string) (string, error) {
 		return "", fmt.Errorf("failed to generate token")
 	}
 
-	if err = setSession(email, token, s.redisClient); err != nil {
+	if err = setSession(ctx, email, token, s.redisClient); err != nil {
 		return "", fmt.Errorf("failed to set session: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		_ = s.deleteSession(email)
+		_ = s.deleteSession(ctx, email)
 		return "", fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -101,12 +112,12 @@ func generateToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func setSession(email, token string, rc RedisClient) error {
+func setSession(ctx context.Context, email, token string, rc RedisClient) error {
 	sk := redisclient.GetSessionKey(email)
-	return rc.SetData(sk, token, sessionExpire)
+	return rc.SetData(ctx, sk, token, sessionExpire)
 }
 
-func (s *AuthService) deleteSession(email string) error {
+func (s *AuthService) deleteSession(ctx context.Context, email string) error {
 	sk := redisclient.GetSessionKey(email)
-	return s.redisClient.DelData(sk)
+	return s.redisClient.DelData(ctx, sk)
 }
