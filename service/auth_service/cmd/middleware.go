@@ -32,8 +32,20 @@ func Timeout() Middleware {
 		return func(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 			defer cancel()
-			r = r.WithContext(ctx)
-			next(w, r)
+			next(w, r.WithContext(ctx))
 		}
 	}
+}
+
+const nowKey = "time"
+
+func TimeNow() Middleware {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			now := time.Now()
+			ctx := context.WithValue(r.Context(), nowKey, now)
+			next(w, r.WithContext(ctx))
+		}
+	}
+
 }
