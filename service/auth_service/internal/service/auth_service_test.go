@@ -3,6 +3,7 @@ package service
 import (
 	"auth_service/internal/model"
 	"auth_service/internal/repository"
+	"context"
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -17,20 +18,20 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) GetUserByEmail(exec repository.SQLExecutor, email string) (*model.User, error) {
-	args := m.Called(exec, email)
+func (m *MockUserRepository) GetUserByEmail(ctx context.Context, exec repository.SQLExecutor, email string) (*model.User, error) {
+	args := m.Called(ctx, exec, email)
 	if u := args.Get(0); u != nil {
 		return u.(*model.User), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
-func (m *MockUserRepository) CreateUser(exec repository.SQLExecutor, user *model.User) error {
-	args := m.Called(exec, user)
+func (m *MockUserRepository) CreateUser(ctx context.Context, exec repository.SQLExecutor, user *model.User) error {
+	args := m.Called(ctx, exec, user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateLastLogin(exec repository.SQLExecutor, user *model.User) error {
-	args := m.Called(exec, user)
+func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, exec repository.SQLExecutor, user *model.User) error {
+	args := m.Called(ctx, exec, user)
 	return args.Error(0)
 }
 
@@ -38,13 +39,13 @@ type MockRedisClient struct {
 	mock.Mock
 }
 
-func (m *MockRedisClient) SetData(key, token string, expire time.Duration) error {
-	args := m.Called(key, token, expire)
+func (m *MockRedisClient) SetData(ctx context.Context, key, token string, expire time.Duration) error {
+	args := m.Called(ctx, key, token, expire)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) DelData(key string) error {
-	args := m.Called(key)
+func (m *MockRedisClient) DelData(ctx context.Context, key string) error {
+	args := m.Called(ctx, key)
 	return args.Error(0)
 }
 
@@ -58,17 +59,19 @@ func TestRegisterUser_Success(t *testing.T) {
 	email := "test@example.com"
 	password := "password123"
 
+	ctx := context.WithValue(context.Background(), "time", time.Now())
+
 	mockRepo := new(MockUserRepository)
 	mockRepo.
-		On("GetUserByEmail", db, email).
+		On("GetUserByEmail", ctx, db, email).
 		Return(nil, nil)
 
 	mockRepo.
-		On("CreateUser", db, mock.AnythingOfType("*model.User")).
+		On("CreateUser", ctx, db, mock.AnythingOfType("*model.User")).
 		Return(nil)
 
 	service := NewAuthService(db, mockRepo, nil)
-	err = service.RegisterUser(email, password)
+	err = service.RegisterUser(ctx, email, password)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
@@ -84,13 +87,15 @@ func TestRegisterUser_UserExists(t *testing.T) {
 	password := "password123"
 	existingUser := &model.User{ID: 1, Email: email, Password: password}
 
+	ctx := context.Background()
+
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", db, email).
+		On("GetUserByEmail", ctx, db, email).
 		Return(existingUser, nil)
 
 	service := NewAuthService(db, mockUserRepo, nil)
-	err = service.RegisterUser(email, password)
+	err = service.RegisterUser(ctx, email, password)
 	assert.Error(t, err)
 	assert.Equal(t, "user already exists", err.Error())
 	mockUserRepo.AssertExpectations(t)
@@ -117,26 +122,28 @@ func TestLoginUser_Success(t *testing.T) {
 		LastLogin: time.Now(),
 	}
 
+	ctx := context.WithValue(context.Background(), "time", time.Now())
+
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", db, email).
+		On("GetUserByEmail", ctx, db, email).
 		Return(user, nil)
 
 	mockUserRepo.
-		On("UpdateLastLogin", mock.Anything, user).
+		On("UpdateLastLogin", ctx, mock.Anything, user).
 		Return(nil)
 
 	sessionKey := redisclient.GetSessionKey(email)
 	mockRedisClient := new(MockRedisClient)
 	mockRedisClient.
-		On("SetData", sessionKey, mock.AnythingOfType("string"), sessionExpire).
+		On("SetData", ctx, sessionKey, mock.AnythingOfType("string"), sessionExpire).
 		Return(nil)
 
 	mockDB.ExpectBegin()
 	mockDB.ExpectCommit()
 
 	service := NewAuthService(db, mockUserRepo, mockRedisClient)
-	token, err := service.LoginUser(email, password)
+	token, err := service.LoginUser(ctx, email, password)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 
@@ -167,13 +174,15 @@ func TestLoginUser_InvalidPassword(t *testing.T) {
 		LastLogin: time.Now(),
 	}
 
+	ctx := context.Background()
+
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", db, email).
+		On("GetUserByEmail", ctx, db, email).
 		Return(user, nil)
 
 	service := NewAuthService(db, mockUserRepo, nil)
-	token, err := service.LoginUser(email, wrongPassword)
+	token, err := service.LoginUser(ctx, email, wrongPassword)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid password", err.Error())
 	assert.Empty(t, token)
