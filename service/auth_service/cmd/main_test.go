@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"golang.org/x/sync/errgroup"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -18,13 +20,17 @@ func TestRun(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	listener, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("failed to listen: %v", err)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return run(ctx)
+		return run(ctx, listener)
 	})
 
-	in := "login"
 	var res struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -37,7 +43,11 @@ func TestRun(t *testing.T) {
 		t.Fatalf("failed to marshal: %v", err)
 	}
 
-	response, err := http.Post("http://localhost:10001/"+in, "application/json", bytes.NewBuffer(reqBody))
+	in := "login"
+	url := fmt.Sprintf("http://%s/%s", listener.Addr().String(), in)
+	t.Logf("try request to %s", url)
+
+	response, err := http.Post(url, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		t.Fatalf("failed to send request: %v", err)
 	}

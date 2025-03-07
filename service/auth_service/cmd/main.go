@@ -7,23 +7,32 @@ import (
 	"auth_service/internal/service"
 	"context"
 	"errors"
-	"fmt"
 	"golang.org/x/sync/errgroup"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
-const port = 10001
 const postMethod = "POST"
 
 func main() {
-	if err := run(context.Background()); err != nil {
+	if len(os.Args) != 2 {
+		log.Printf("need port number")
+		os.Exit(1)
+	}
+	port := os.Args[1]
+	l, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		log.Fatalf("failed to listen port %s: %v", port, err)
+	}
+	if err := run(context.Background(), l); err != nil {
 		log.Fatalf("failed to run: %v", err)
 	}
 }
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, listener net.Listener) error {
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
@@ -49,14 +58,13 @@ func run(ctx context.Context) error {
 	))
 
 	s := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 
 	// 반환 값으로 오류를 받을 수 없어서 errgroup 패키지를 사용하여 오류를 반환
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := s.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("failed to close: %+v", err)
 			return err
 		}
