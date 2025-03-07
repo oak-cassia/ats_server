@@ -1,7 +1,6 @@
 go 1.24.0
 
 use (
-	./service/auth_service
-	./lib/response
-	./lib/redisclient
+	service/auth_service
+	lib
 )

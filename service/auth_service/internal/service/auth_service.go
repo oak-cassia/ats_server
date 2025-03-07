@@ -8,7 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
-	"redisclient"
+	"lib/redisclient"
 	"time"
 )
 

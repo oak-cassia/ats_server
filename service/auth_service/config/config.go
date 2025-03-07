@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/joho/godotenv"
+	"lib/redisclient"
+	_ "lib/redisclient"
 	"log"
 	"os"
-	"redisclient"
-	_ "redisclient"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"

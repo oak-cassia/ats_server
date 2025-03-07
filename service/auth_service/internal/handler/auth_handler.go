@@ -3,8 +3,8 @@ package handler
 import (
 	"auth_service/internal/service"
 	"encoding/json"
+	"lib/response"
 	"net/http"
-	"response"
 )
 
 type AuthHandler struct {
