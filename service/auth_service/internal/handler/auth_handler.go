@@ -24,7 +24,7 @@ func (h *AuthHandler) RegisterHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.authService.RegisterUser(req.Email, req.Password)
+	err := h.authService.RegisterUser(r.Context(), req.Email, req.Password)
 	if err != nil {
 		response.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,7 +45,7 @@ func (h *AuthHandler) LoginHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.authService.LoginUser(req.Email, req.Password)
+	token, err := h.authService.LoginUser(r.Context(), req.Email, req.Password)
 	if err != nil {
 		response.Error(rw, err.Error(), http.StatusUnauthorized)
 		return
