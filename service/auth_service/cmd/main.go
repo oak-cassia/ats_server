@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"pkg/mysqlconn"
+	"pkg/redisclient"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -25,24 +27,29 @@ func main() {
 		os.Exit(1)
 	}
 	port := os.Args[1]
-	l, err := net.Listen("tcp", ":"+port)
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("failed to listen port %s: %v", port, err)
 	}
-	if err := run(context.Background(), l); err != nil {
+
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+	mc, err := mysqlconn.New(cfg.DbUser, cfg.DbPw, cfg.DbHost, cfg.DbName)
+	if err != nil {
+		log.Fatalf("failed to connect mc: %v", err)
+	}
+	rc := redisclient.New(cfg.RedisHost, cfg.RedisPw, 0)
+
+	if err := run(context.Background(), listener, mc, rc); err != nil {
 		log.Fatalf("failed to run: %v", err)
 	}
 }
 
-func run(ctx context.Context, listener net.Listener) error {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
-	}
-	defer cfg.Close()
-
+func run(ctx context.Context, listener net.Listener, mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) error {
 	userRepo := repository.NewSqlUserRepository()
-	authService := service.NewAuthService(cfg.DB, userRepo, cfg.Redis)
+	authService := service.NewAuthService(mc.Conn(), userRepo, rc)
 	authHandler := handler.NewAuthHandler(authService)
 
 	mux := http.NewServeMux()
