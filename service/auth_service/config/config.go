@@ -14,7 +14,7 @@ type Config struct {
 	DbHost    string `env:"DB_HOST"`
 	DbName    string `env:"DB_NAME"`
 	RedisHost string `env:"REDIS_HOST"`
-	RedisPW   string `env:"REDIS_PASSWORD"`
+	RedisPw   string `env:"REDIS_PASSWORD"`
 }
 
 func New() (*Config, error) {
