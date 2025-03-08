@@ -1,0 +1,4 @@
+[mysqld]
+default-authentication-plugin=mysql_native_password
+character-set-server=utf8mb4
+sql_mode=TRADITIONAL,ONLY_FULL_GROUP_BY
