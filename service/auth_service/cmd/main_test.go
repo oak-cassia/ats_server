@@ -1,9 +1,9 @@
 package main
 
 import (
+	"auth_service/config"
 	"context"
 	"log"
-	"net"
 	"os"
 	"testing"
 	"time"
@@ -19,15 +19,15 @@ func TestRun(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	listener, err := net.Listen("tcp", "localhost:0")
+	cfg, err := config.New()
 	if err != nil {
-		t.Fatalf("failed to listen: %v", err)
+		log.Fatalf("failed to load config: %v", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		return run(ctx, listener, nil, nil)
+		return run(cfg, ctx, nil, nil)
 	})
 
 	//var res struct {
