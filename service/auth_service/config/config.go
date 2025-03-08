@@ -19,7 +19,9 @@ type AppConfig struct {
 }
 
 func (ac *AppConfig) Close() {
-	_ = ac.DB.Close()
+	if ac.DB != nil {
+		_ = ac.DB.Close()
+	}
 }
 
 func LoadConfig() (*AppConfig, error) {
