@@ -6,13 +6,17 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
 )
 
 func TestRun(t *testing.T) {
+	assertions := assert.New(t)
+
 	listener, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("failed to listen port: %v", err)
@@ -30,29 +34,14 @@ func TestRun(t *testing.T) {
 		return s.Run(ctx)
 	})
 
-	url := fmt.Sprintf("http://%s/test", listener.Addr().String())
-	t.Logf("try request to %s", url)
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/test", nil)
 
-	response, err := http.Get(url)
-	if err != nil {
-		t.Fatalf("failed to send request: %v", err)
-	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(response.Body)
+	mux.ServeHTTP(res, req)
+	assertions.Equal(http.StatusOK, res.Code)
 
-	if response.StatusCode != http.StatusOK {
-		t.Errorf("expected %d, got %d", http.StatusOK, response.StatusCode)
-	}
-
-	bodyBytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		t.Fatalf("failed to read response body: %v", err)
-	}
-	bodyStr := string(bodyBytes)
-	if bodyStr != "Hello" {
-		t.Errorf("expected response body %q, got %q", "Hello", bodyStr)
-	}
+	data, _ := io.ReadAll(res.Body)
+	assertions.Equal("Hello", string(data))
 
 	time.Sleep(1 * time.Second)
 	cancel()
