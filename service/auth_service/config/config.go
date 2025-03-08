@@ -10,7 +10,7 @@ type Config struct {
 	Port int    `env:"PORT" envDefault:"80"`
 
 	DbUser    string `env:"DB_USER"`
-	DbPw      string `env:"DB_PASS"`
+	DbPw      string `env:"DB_PASSWORD"`
 	DbHost    string `env:"DB_HOST"`
 	DbName    string `env:"DB_NAME"`
 	RedisHost string `env:"REDIS_HOST"`
