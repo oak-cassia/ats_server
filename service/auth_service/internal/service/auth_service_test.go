@@ -6,7 +6,7 @@ import (
 
 	"context"
 	"database/sql"
-	"lib/redisclient"
+	"pkg/redisclient"
 	"testing"
 	"time"
 

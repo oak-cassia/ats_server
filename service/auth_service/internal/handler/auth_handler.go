@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"lib/response"
 	"net/http"
+	"pkg/response"
 
 	"auth_service/internal/service"
 )

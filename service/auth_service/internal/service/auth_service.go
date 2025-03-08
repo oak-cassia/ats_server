@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"lib/redisclient"
+	"pkg/redisclient"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
