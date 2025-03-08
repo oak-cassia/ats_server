@@ -16,5 +16,5 @@ func Error(w http.ResponseWriter, errMsg string, status int) {
 }
 
 func SetContentJSON(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
