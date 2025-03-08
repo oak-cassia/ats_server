@@ -1,18 +1,20 @@
 package main
 
 import (
-	"auth_service/config"
-	"auth_service/internal/handler"
-	"auth_service/internal/repository"
-	"auth_service/internal/service"
 	"context"
 	"errors"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"golang.org/x/sync/errgroup"
+
+	"auth_service/config"
+	"auth_service/internal/handler"
+	"auth_service/internal/repository"
+	"auth_service/internal/service"
 )
 
 const postMethod = "POST"

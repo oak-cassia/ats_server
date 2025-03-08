@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"net"
 	"os"
 	"testing"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func TestRun(t *testing.T) {

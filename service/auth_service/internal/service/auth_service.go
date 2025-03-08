@@ -1,15 +1,17 @@
 package service
 
 import (
-	"auth_service/internal/model"
 	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
 	"lib/redisclient"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
+
+	"auth_service/internal/model"
 )
 
 const tokenSize = 32

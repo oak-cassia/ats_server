@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"auth_service/internal/service"
 	"encoding/json"
 	"lib/response"
 	"net/http"
+
+	"auth_service/internal/service"
 )
 
 type AuthHandler struct {

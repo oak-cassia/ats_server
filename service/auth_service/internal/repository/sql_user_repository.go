@@ -1,8 +1,9 @@
 package repository
 
 import (
-	"auth_service/internal/model"
 	"context"
+
+	"auth_service/internal/model"
 )
 
 type SqlUserRepository struct{}

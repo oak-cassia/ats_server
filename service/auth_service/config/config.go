@@ -3,14 +3,15 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"github.com/joho/godotenv"
-	"lib/redisclient"
-	_ "lib/redisclient"
 	"log"
 	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
+
+	"lib/redisclient"
+	_ "lib/redisclient"
 )
 
 type AppConfig struct {

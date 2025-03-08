@@ -3,15 +3,17 @@ package service
 import (
 	"auth_service/internal/model"
 	"auth_service/internal/repository"
+
 	"context"
 	"database/sql"
+	"lib/redisclient"
+	"testing"
+	"time"
+
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
-	"lib/redisclient"
-	"testing"
-	"time"
 )
 
 type MockUserRepository struct {
