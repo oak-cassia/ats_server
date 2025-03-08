@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"pkg/mysqlconn"
 	"pkg/redisclient"
 	"time"
@@ -22,16 +22,6 @@ import (
 const postMethod = "POST"
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Printf("need port number")
-		os.Exit(1)
-	}
-	port := os.Args[1]
-	listener, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		log.Fatalf("failed to listen port %s: %v", port, err)
-	}
-
 	cfg, err := config.New()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
@@ -42,12 +32,12 @@ func main() {
 	}
 	rc := redisclient.New(cfg.RedisHost, cfg.RedisPw, 0)
 
-	if err := run(context.Background(), listener, mc, rc); err != nil {
+	if err := run(cfg, context.Background(), mc, rc); err != nil {
 		log.Fatalf("failed to run: %v", err)
 	}
 }
 
-func run(ctx context.Context, listener net.Listener, mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) error {
+func run(cfg *config.Config, ctx context.Context, mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) error {
 	userRepo := repository.NewSqlUserRepository()
 	authService := service.NewAuthService(mc.Conn(), userRepo, rc)
 	authHandler := handler.NewAuthHandler(authService)
@@ -65,6 +55,11 @@ func run(ctx context.Context, listener net.Listener, mc *mysqlconn.MySQLConn, rc
 		Timeout(5*time.Second),
 		TimeNow(),
 	))
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
+	}
 
 	s := &http.Server{
 		Handler: mux,
