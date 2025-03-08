@@ -1,0 +1,13 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: service/auth_service/Dockerfile
+      args:
+        - target=dev
+    image: ats-auth
+    volumes:
+      - .:/project
+    ports:
+      - "10001:80"
+    working_dir: /project/service/auth_service
