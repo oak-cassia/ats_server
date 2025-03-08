@@ -10,8 +10,8 @@ type MySQLConn struct {
 	conn *sql.DB
 }
 
-func New(user, password, host, name string) (*MySQLConn, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", user, password, host, name)
+func New(user, password, host, port, name string) (*MySQLConn, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, port, name)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)

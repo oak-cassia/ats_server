@@ -29,7 +29,7 @@ func run(ctx context.Context) error {
 		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
 	}
 
-	mc, err := mysqlconn.New(cfg.DbUser, cfg.DbPw, cfg.DbHost, cfg.DbName)
+	mc, err := mysqlconn.New(cfg.DbUser, cfg.DbPw, cfg.DbHost, cfg.DbPort, cfg.DbName)
 	if err != nil {
 		log.Fatalf("failed to connect mc: %v", err)
 	}

@@ -9,9 +9,10 @@ services:
     environment:
       ENV: dev
       PORT: 8080
-      DB_USER: root
+      DB_USER: auth
       DB_PASSWORD: 1234
-      DB_HOST: host.docker.internal:3306
+      DB_HOST: auth-db
+      DB_PORT: 3306
       DB_NAME: auth
       REDIS_HOST: host.docker.internal:6379
       REDIS_PASSWORD: ""
@@ -20,3 +21,19 @@ services:
     ports:
       - "10001:8080"
     working_dir: /project/service/auth_service
+  auth-db:
+    image: mysql:8.0.33
+    platform: linux/arm64
+    container_name: auth-db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: auth
+      MYSQL_PASSWORD: 1234
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-db-data:/var/lib/mysql
+      - $PWD/migration/auth/conf.d:/etc/mysql/conf.d
+    ports:
+      - "20001:3306"
+volumes:
+  auth-db-data:
