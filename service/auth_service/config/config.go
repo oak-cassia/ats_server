@@ -1,71 +1,26 @@
 package config
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"os"
-	"time"
-
+	"github.com/caarlos0/env/v11"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
-
-	"lib/redisclient"
-	_ "lib/redisclient"
 )
 
-type AppConfig struct {
-	DB    *sql.DB
-	Redis *redisclient.RedisClient
+type Config struct {
+	Env  string `env:"ENV" envDefault:"dev"`
+	Port int    `env:"PORT" envDefault:"80"`
+
+	DbUser    string `env:"DB_USER"`
+	DbPw      string `env:"DB_PASS"`
+	DbHost    string `env:"DB_HOST"`
+	DbName    string `env:"DB_NAME"`
+	RedisHost string `env:"REDIS_HOST"`
+	RedisPW   string `env:"REDIS_PASSWORD"`
 }
 
-func (ac *AppConfig) Close() {
-	if ac.DB != nil {
-		_ = ac.DB.Close()
+func New() (*Config, error) {
+	cfg := &Config{}
+	if err := env.Parse(cfg); err != nil {
+		return nil, err
 	}
-}
-
-func LoadConfig() (*AppConfig, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading .env file")
-	}
-
-	db, err := mysqlConfig()
-	redis := redisConfig()
-
-	return &AppConfig{
-		DB:    db,
-		Redis: redis,
-	}, nil
-}
-
-func mysqlConfig() (*sql.DB, error) {
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	host := os.Getenv("DB_HOST")
-	name := os.Getenv("DB_NAME")
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", user, password, host, name)
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
-
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	return db, nil
-}
-
-func redisConfig() *redisclient.RedisClient {
-	host := os.Getenv("REDIS_HOST")
-	password := os.Getenv("REDIS_PASSWORD")
-	db := 0
-	return redisclient.NewRedisClient(host, password, db)
+	return cfg, nil
 }
