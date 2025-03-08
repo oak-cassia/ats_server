@@ -24,7 +24,7 @@ func (r *SqlUserRepository) CreateUser(ctx context.Context, exec SQLExecutor, us
 		return err
 	}
 
-	user.ID = uint(id)
+	user.ID = id
 	return nil
 }
 
