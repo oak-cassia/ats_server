@@ -7,8 +7,11 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
 	"pkg/mysqlconn"
 	"pkg/redisclient"
+	"syscall"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -38,6 +41,9 @@ func main() {
 }
 
 func run(cfg *config.Config, ctx context.Context, mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) error {
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	userRepo := repository.NewSqlUserRepository()
 	authService := service.NewAuthService(mc.Conn(), userRepo, rc)
 	authHandler := handler.NewAuthHandler(authService)
