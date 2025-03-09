@@ -6,24 +6,25 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"fmt"
-	"pkg/redisclient"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 
 	"auth_service/internal/model"
+	"pkg/redisclient"
 )
 
 const tokenSize = 32
 const sessionExpire = 24 * time.Hour
 
 type AuthService struct {
-	db          *sql.DB
+	db          *sqlx.DB
 	userRepo    UserRepository
 	redisClient RedisClient
 }
 
-func NewAuthService(db *sql.DB, ur UserRepository, rc RedisClient) AuthService {
+func NewAuthService(db *sqlx.DB, ur UserRepository, rc RedisClient) AuthService {
 	return AuthService{
 		db:          db,
 		userRepo:    ur,

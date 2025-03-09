@@ -3,6 +3,7 @@ package service
 import (
 	"auth_service/internal/model"
 	"auth_service/internal/repository"
+	"github.com/jmoiron/sqlx"
 
 	"context"
 	"database/sql"
@@ -57,6 +58,7 @@ func TestRegisterUser_Success(t *testing.T) {
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
+	xdb := sqlx.NewDb(db, "mysql")
 
 	email := "test@example.com"
 	password := "password123"
@@ -65,14 +67,14 @@ func TestRegisterUser_Success(t *testing.T) {
 
 	mockRepo := new(MockUserRepository)
 	mockRepo.
-		On("GetUserByEmail", ctx, db, email).
+		On("GetUserByEmail", ctx, xdb, email).
 		Return(nil, nil)
 
 	mockRepo.
-		On("CreateUser", ctx, db, mock.AnythingOfType("*model.User")).
+		On("CreateUser", ctx, xdb, mock.AnythingOfType("*model.User")).
 		Return(nil)
 
-	service := NewAuthService(db, mockRepo, nil)
+	service := NewAuthService(xdb, mockRepo, nil)
 	err = service.RegisterUser(ctx, email, password)
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
@@ -84,6 +86,7 @@ func TestRegisterUser_UserExists(t *testing.T) {
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
+	xdb := sqlx.NewDb(db, "mysql")
 
 	email := "test@example.com"
 	password := "password123"
@@ -93,10 +96,10 @@ func TestRegisterUser_UserExists(t *testing.T) {
 
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", ctx, db, email).
+		On("GetUserByEmail", ctx, xdb, email).
 		Return(existingUser, nil)
 
-	service := NewAuthService(db, mockUserRepo, nil)
+	service := NewAuthService(xdb, mockUserRepo, nil)
 	err = service.RegisterUser(ctx, email, password)
 	assert.Error(t, err)
 	assert.Equal(t, "user already exists", err.Error())
@@ -109,6 +112,7 @@ func TestLoginUser_Success(t *testing.T) {
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
+	xdb := sqlx.NewDb(db, "mysql")
 
 	email := "test@example.com"
 	password := "password123"
@@ -128,7 +132,7 @@ func TestLoginUser_Success(t *testing.T) {
 
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", ctx, db, email).
+		On("GetUserByEmail", ctx, xdb, email).
 		Return(user, nil)
 
 	mockUserRepo.
@@ -144,7 +148,7 @@ func TestLoginUser_Success(t *testing.T) {
 	mockDB.ExpectBegin()
 	mockDB.ExpectCommit()
 
-	service := NewAuthService(db, mockUserRepo, mockRedisClient)
+	service := NewAuthService(xdb, mockUserRepo, mockRedisClient)
 	token, err := service.LoginUser(ctx, email, password)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
@@ -160,6 +164,7 @@ func TestLoginUser_InvalidPassword(t *testing.T) {
 	defer func(db *sql.DB) {
 		_ = db.Close()
 	}(db)
+	xdb := sqlx.NewDb(db, "mysql")
 
 	email := "test@example.com"
 	correctPassword := "correctpassword"
@@ -180,10 +185,10 @@ func TestLoginUser_InvalidPassword(t *testing.T) {
 
 	mockUserRepo := new(MockUserRepository)
 	mockUserRepo.
-		On("GetUserByEmail", ctx, db, email).
+		On("GetUserByEmail", ctx, xdb, email).
 		Return(user, nil)
 
-	service := NewAuthService(db, mockUserRepo, nil)
+	service := NewAuthService(xdb, mockUserRepo, nil)
 	token, err := service.LoginUser(ctx, email, wrongPassword)
 	assert.Error(t, err)
 	assert.Equal(t, "invalid password", err.Error())
