@@ -3,9 +3,9 @@ package model
 import "time"
 
 type User struct {
-	ID        int64
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	LastLogin time.Time
+	ID        int64     `db:"id"`
+	Email     string    `db:"email"`
+	Password  string    `db:"password"`
+	CreatedAt time.Time `db:"created_at"`
+	LastLogin time.Time `db:"last_login"`
 }

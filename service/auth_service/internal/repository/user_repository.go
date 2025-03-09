@@ -31,7 +31,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, exec SQLExecutor, user 
 func (r *UserRepository) GetUserByEmail(ctx context.Context, exec SQLExecutor, email string) (*model.User, error) {
 	var user model.User
 	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
-	err := exec.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt, &user.LastLogin)
+	err := exec.GetContext(ctx, &user, query, email)
 	if err != nil {
 		return nil, err
 	}
