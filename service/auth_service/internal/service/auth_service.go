@@ -93,7 +93,7 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password string) (st
 		return "", fmt.Errorf("failed to generate token")
 	}
 
-	if err = setSession(ctx, email, token, s.redisClient); err != nil {
+	if err = s.setSession(ctx, email, token); err != nil {
 		return "", fmt.Errorf("failed to set session: %w", err)
 	}
 
@@ -114,9 +114,9 @@ func generateToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func setSession(ctx context.Context, email, token string, rc RedisClient) error {
+func (s *AuthService) setSession(ctx context.Context, email, token string) error {
 	sk := redisclient.GetSessionKey(email)
-	return rc.SetData(ctx, sk, token, sessionExpire)
+	return s.redisClient.SetData(ctx, sk, token, sessionExpire)
 }
 
 func (s *AuthService) deleteSession(ctx context.Context, email string) error {
