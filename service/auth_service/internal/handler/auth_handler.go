@@ -4,15 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"pkg/response"
-
-	"auth_service/internal/service"
 )
 
 type AuthHandler struct {
-	authService service.AuthService
+	authService AuthService
 }
 
-func NewAuthHandler(authService service.AuthService) *AuthHandler {
+func NewAuthHandler(authService AuthService) *AuthHandler {
 	return &AuthHandler{
 		authService: authService,
 	}
