@@ -9,11 +9,32 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 20s
+          --health-timeout 10s
+          --health-retries 10
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_USER: auth
+          MYSQL_PASSWORD: 1234
+          MYSQL_DATABASE: auth
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with:
-        go-version: '>=1.24'
-    - run: go test ./service/auth_service/... -coverprofile=coverage.out
-    - name: report coverage
-      uses: k1LoW/octocov-action@v0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.24'
+      - run: |
+          go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+          migrate -path=./migration/auth -database \
+          "mysql://auth:1234@tcp(localhost:3306)/auth" up
+
+      - run: go test ./service/auth_service/... -coverprofile=coverage.out
+      - name: report coverage
+        uses: k1LoW/octocov-action@v0
