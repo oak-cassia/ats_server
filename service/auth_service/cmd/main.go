@@ -33,6 +33,10 @@ func run(ctx context.Context) error {
 	if err != nil {
 		log.Fatalf("failed to connect mc: %v", err)
 	}
+	defer func(mc *mysqlconn.MySQLConn) {
+		_ = mc.Close()
+	}(mc)
+
 	rc := redisclient.New(cfg.RedisHost, cfg.RedisPw, 0)
 	mux := NewMux(mc, rc)
 
