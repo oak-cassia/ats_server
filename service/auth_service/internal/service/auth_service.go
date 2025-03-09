@@ -24,8 +24,8 @@ type AuthService struct {
 	redisClient RedisClient
 }
 
-func NewAuthService(db *sqlx.DB, ur UserRepository, rc RedisClient) AuthService {
-	return AuthService{
+func NewAuthService(db *sqlx.DB, ur UserRepository, rc RedisClient) *AuthService {
+	return &AuthService{
 		db:          db,
 		userRepo:    ur,
 		redisClient: rc,
