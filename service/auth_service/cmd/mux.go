@@ -11,7 +11,7 @@ import (
 )
 
 func NewMux(mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) *http.ServeMux {
-	userRepo := repository.NewSqlUserRepository()
+	userRepo := repository.NewUserRepository()
 	authService := service.NewAuthService(mc.Conn(), userRepo, rc)
 	authHandler := handler.NewAuthHandler(authService)
 
