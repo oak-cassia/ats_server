@@ -12,7 +12,7 @@ func NewUserRepository() *UserRepository {
 	return &UserRepository{}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, exec SQLExecutor, user *model.User) error {
+func (r *UserRepository) CreateUser(ctx context.Context, exec Execer, user *model.User) error {
 	query := "INSERT INTO account (email, password, created_at, last_login) VALUES (?, ?, ?, ?)"
 	result, err := exec.ExecContext(ctx, query, user.Email, user.Password, user.CreatedAt, user.LastLogin)
 	if err != nil {
@@ -28,10 +28,10 @@ func (r *UserRepository) CreateUser(ctx context.Context, exec SQLExecutor, user 
 	return nil
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, exec SQLExecutor, email string) (*model.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, q Queryer, email string) (*model.User, error) {
 	var user model.User
 	query := "SELECT id, email, password, created_at, last_login FROM account WHERE email = ?"
-	err := exec.GetContext(ctx, &user, query, email)
+	err := q.GetContext(ctx, &user, query, email)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, exec SQLExecutor, e
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateLastLogin(ctx context.Context, exec SQLExecutor, user *model.User) error {
+func (r *UserRepository) UpdateLastLogin(ctx context.Context, exec Execer, user *model.User) error {
 	query := "UPDATE account SET last_login = ? WHERE id = ?"
 	_, err := exec.ExecContext(ctx, query, user.LastLogin, user.ID)
 	return err

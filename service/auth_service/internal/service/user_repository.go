@@ -8,7 +8,7 @@ import (
 )
 
 type UserRepository interface {
-	GetUserByEmail(ctx context.Context, exec repository.SQLExecutor, email string) (*model.User, error)
-	CreateUser(ctx context.Context, exec repository.SQLExecutor, user *model.User) error
-	UpdateLastLogin(ctx context.Context, exec repository.SQLExecutor, user *model.User) error
+	GetUserByEmail(ctx context.Context, q repository.Queryer, email string) (*model.User, error)
+	CreateUser(ctx context.Context, exec repository.Execer, user *model.User) error
+	UpdateLastLogin(ctx context.Context, exec repository.Execer, user *model.User) error
 }

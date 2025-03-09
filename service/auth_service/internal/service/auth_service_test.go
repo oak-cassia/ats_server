@@ -21,19 +21,19 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) GetUserByEmail(ctx context.Context, exec repository.SQLExecutor, email string) (*model.User, error) {
-	args := m.Called(ctx, exec, email)
+func (m *MockUserRepository) GetUserByEmail(ctx context.Context, q repository.Queryer, email string) (*model.User, error) {
+	args := m.Called(ctx, q, email)
 	if u := args.Get(0); u != nil {
 		return u.(*model.User), args.Error(1)
 	}
 	return nil, args.Error(1)
 }
-func (m *MockUserRepository) CreateUser(ctx context.Context, exec repository.SQLExecutor, user *model.User) error {
+func (m *MockUserRepository) CreateUser(ctx context.Context, exec repository.Execer, user *model.User) error {
 	args := m.Called(ctx, exec, user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, exec repository.SQLExecutor, user *model.User) error {
+func (m *MockUserRepository) UpdateLastLogin(ctx context.Context, exec repository.Execer, user *model.User) error {
 	args := m.Called(ctx, exec, user)
 	return args.Error(0)
 }
