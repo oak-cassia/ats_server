@@ -42,12 +42,12 @@ type MockRedisClient struct {
 	mock.Mock
 }
 
-func (m *MockRedisClient) SetData(ctx context.Context, key, token string, expire time.Duration) error {
+func (m *MockRedisClient) Save(ctx context.Context, key, token string, expire time.Duration) error {
 	args := m.Called(ctx, key, token, expire)
 	return args.Error(0)
 }
 
-func (m *MockRedisClient) DelData(ctx context.Context, key string) error {
+func (m *MockRedisClient) Delete(ctx context.Context, key string) error {
 	args := m.Called(ctx, key)
 	return args.Error(0)
 }
@@ -142,7 +142,7 @@ func TestLoginUser_Success(t *testing.T) {
 	sessionKey := redisclient.GetSessionKey(email)
 	mockRedisClient := new(MockRedisClient)
 	mockRedisClient.
-		On("SetData", ctx, sessionKey, mock.AnythingOfType("string"), sessionExpire).
+		On("Save", ctx, sessionKey, mock.AnythingOfType("string"), sessionExpire).
 		Return(nil)
 
 	mockDB.ExpectBegin()

@@ -117,10 +117,10 @@ func generateToken() string {
 
 func (s *AuthService) setSession(ctx context.Context, email, token string) error {
 	sk := redisclient.GetSessionKey(email)
-	return s.redisClient.SetData(ctx, sk, token, sessionExpire)
+	return s.redisClient.Save(ctx, sk, token, sessionExpire)
 }
 
 func (s *AuthService) deleteSession(ctx context.Context, email string) error {
 	sk := redisclient.GetSessionKey(email)
-	return s.redisClient.DelData(ctx, sk)
+	return s.redisClient.Delete(ctx, sk)
 }
