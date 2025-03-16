@@ -37,7 +37,7 @@ func run(ctx context.Context) error {
 		_ = mc.Close()
 	}(mc)
 
-	rc := redisclient.New(cfg.RedisHost, cfg.RedisPw, 0)
+	rc := redisclient.New(cfg.RedisHost, cfg.RedisPort, cfg.RedisPw, 0)
 	mux := NewMux(mc, rc)
 
 	s := NewServer(listener, mux)

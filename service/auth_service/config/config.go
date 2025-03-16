@@ -14,6 +14,7 @@ type Config struct {
 	DbPort    string `env:"DB_PORT"`
 	DbName    string `env:"DB_NAME"`
 	RedisHost string `env:"REDIS_HOST"`
+	RedisPort string `env:"REDIS_PORT"`
 	RedisPw   string `env:"REDIS_PASSWORD"`
 }
 

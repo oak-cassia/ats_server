@@ -14,7 +14,8 @@ services:
       DB_HOST: auth-db
       DB_PORT: 3306
       DB_NAME: auth
-      REDIS_HOST: host.docker.internal:6379
+      REDIS_HOST: ats-redis
+      REDIS_PORT: 6379
       REDIS_PASSWORD: ""
     volumes:
       - .:/project
@@ -35,5 +36,14 @@ services:
       - $PWD/migration/auth/conf.d:/etc/mysql/conf.d
     ports:
       - "20001:3306"
+  ats-redis:
+    image: "redis:latest"
+    container_name: ats-redis
+    ports:
+      - "30001:6379"
+    volumes:
+        - redis-data:/data
+
 volumes:
   auth-db-data:
+  redis-data:

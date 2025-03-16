@@ -11,9 +11,9 @@ type RedisClient struct {
 	client *redis.Client
 }
 
-func New(addr, password string, db int) *RedisClient {
+func New(host, port, password string, db int) *RedisClient {
 	client := redis.NewClient(&redis.Options{
-		Addr:         addr,
+		Addr:         host + ":" + port,
 		Password:     password,
 		DB:           db,
 		DialTimeout:  5 * time.Second,
