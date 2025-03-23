@@ -51,6 +51,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, email, password string) 
 	user := &model.User{
 		Email:     email,
 		Password:  string(hash),
+		Role:      "admin", // TODO: role
 		CreatedAt: now,
 		LastLogin: now,
 	}

@@ -20,6 +20,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 		ID:        1,
 		Email:     "test",
 		Password:  "test",
+		Role:      "role", // TODO: role
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
@@ -27,8 +28,8 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	assert.NoError(t, err)
 	t.Cleanup(func() { _ = db.Close() })
 	mock.ExpectExec(
-		`INSERT INTO account \(email, password, created_at, last_login\) VALUES \(\?, \?, \?, \?\)`,
-	).WithArgs(testUser.Email, testUser.Password, testUser.CreatedAt, testUser.LastLogin).
+		`INSERT INTO account \(email, password, role, created_at, last_login\) VALUES \(\?, \?, \?, \?, \?\)`,
+	).WithArgs(testUser.Email, testUser.Password, testUser.Role, testUser.CreatedAt, testUser.LastLogin).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	xdb := sqlx.NewDb(db, "mysql")

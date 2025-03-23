@@ -1,10 +1,11 @@
 package service
 
 import (
-	"auth_service/internal/model"
-	"auth_service/internal/repository"
 	"context"
 	"time"
+
+	"auth_service/internal/model"
+	"auth_service/internal/repository"
 )
 
 type UserRepository interface {

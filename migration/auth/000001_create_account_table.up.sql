@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS `auth`.`account`
     `id`         BIGINT AUTO_INCREMENT PRIMARY KEY,
     `email`      VARCHAR(128) NOT NULL UNIQUE,
     `password`   VARCHAR(255) NOT NULL,
+    `role`       VARCHAR(64)  NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `last_login` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB

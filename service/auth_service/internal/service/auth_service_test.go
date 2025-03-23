@@ -90,7 +90,7 @@ func TestRegisterUser_UserExists(t *testing.T) {
 
 	email := "test@example.com"
 	password := "password123"
-	existingUser := &model.User{ID: 1, Email: email, Password: password}
+	existingUser := &model.User{ID: 1, Email: email, Password: password, Role: "admin" /*TODO:role*/}
 
 	ctx := context.Background()
 
@@ -124,6 +124,7 @@ func TestLoginUser_Success(t *testing.T) {
 		ID:        1,
 		Email:     email,
 		Password:  string(hash),
+		Role:      "admin", //TODO: role
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
@@ -177,6 +178,7 @@ func TestLoginUser_InvalidPassword(t *testing.T) {
 		ID:        1,
 		Email:     email,
 		Password:  string(hash),
+		Role:      "admin", // TODO: role
 		CreatedAt: time.Now(),
 		LastLogin: time.Now(),
 	}
