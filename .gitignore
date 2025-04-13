@@ -47,4 +47,4 @@ dist/
 .DS_Store
 
 # Sensitive files
-pkg/auth/cert/secret.pem
+# pkg/auth/cert/secret.pem (Removed to allow publishing for learning purposes)
