@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"pkg/auth"
 	"time"
 
 	"auth_service/internal/model"
@@ -17,4 +18,8 @@ type UserRepository interface {
 type RedisClient interface {
 	Save(ctx context.Context, key, value string, expiration time.Duration) error
 	Delete(ctx context.Context, key string) error
+}
+
+type JWTGenerator interface {
+	GenerateToken(ctx context.Context, user auth.User) (string, error)
 }

@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"auth_service/internal/model"
-	"pkg/redisclient"
+	"pkg/auth"
 )
 
 const tokenSize = 32
@@ -22,14 +22,21 @@ type AuthService struct {
 	db          *sqlx.DB
 	userRepo    UserRepository
 	redisClient RedisClient
+	jwtGen      JWTGenerator
 }
 
-func NewAuthService(db *sqlx.DB, ur UserRepository, rc RedisClient) *AuthService {
+func NewAuthService(db *sqlx.DB, ur UserRepository, rc RedisClient, jwtGen JWTGenerator) *AuthService {
 	return &AuthService{
 		db:          db,
 		userRepo:    ur,
 		redisClient: rc,
+		jwtGen:      jwtGen,
 	}
+}
+
+// GetTokenKey returns Redis key for JWT token
+func GetTokenKey(email string) string {
+	return fmt.Sprintf("jwt:%s", email)
 }
 
 func (s *AuthService) RegisterUser(ctx context.Context, email, password string) error {
@@ -90,23 +97,38 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password string) (st
 		return "", fmt.Errorf("failed to update last login: %w", err)
 	}
 
-	token := generateToken()
-	if token == "" {
-		return "", fmt.Errorf("failed to generate token")
+	// JWT 토큰 생성
+	tokenUser := auth.User{
+		ID:    user.ID,
+		Email: user.Email,
+		Role:  user.Role,
 	}
 
-	if err = s.setSession(ctx, email, token); err != nil {
-		return "", fmt.Errorf("failed to set session: %w", err)
+	token, err := s.jwtGen.GenerateToken(ctx, tokenUser)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Redis에 토큰 저장
+	if err := s.redisClient.Save(
+		ctx,
+		GetTokenKey(email),
+		token,
+		sessionExpire,
+	); err != nil {
+		return "", fmt.Errorf("failed to store token: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
-		_ = s.deleteSession(ctx, email)
+		// 트랜잭션 실패 시 토큰 삭제
+		_ = s.redisClient.Delete(ctx, GetTokenKey(email))
 		return "", fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return token, nil
 }
 
+// 이 함수는 후방 호환성을 위해 남겨두지만 더 이상 사용되지 않습니다.
 func generateToken() string {
 	b := make([]byte, tokenSize)
 	if _, err := rand.Read(b); err != nil {
@@ -116,12 +138,7 @@ func generateToken() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func (s *AuthService) setSession(ctx context.Context, email, token string) error {
-	sk := redisclient.GetSessionKey(email)
-	return s.redisClient.Save(ctx, sk, token, sessionExpire)
-}
-
-func (s *AuthService) deleteSession(ctx context.Context, email string) error {
-	sk := redisclient.GetSessionKey(email)
-	return s.redisClient.Delete(ctx, sk)
+// 토큰 폐기
+func (s *AuthService) RevokeToken(ctx context.Context, email string) error {
+	return s.redisClient.Delete(ctx, GetTokenKey(email))
 }

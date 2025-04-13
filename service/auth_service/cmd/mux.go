@@ -5,14 +5,30 @@ import (
 	"auth_service/internal/repository"
 	"auth_service/internal/service"
 	"net/http"
+	"pkg/auth"
 	"pkg/mysqlconn"
 	"pkg/redisclient"
 	"time"
+
+	"github.com/lestrrat-go/jwx/v2/jwa"
 )
 
 func NewMux(mc *mysqlconn.MySQLConn, rc *redisclient.RedisClient) *http.ServeMux {
 	userRepo := repository.NewUserRepository()
-	authService := service.NewAuthService(mc.Conn(), userRepo, rc)
+
+	// JWT 생성기 설정
+	jwtConfig := auth.JWTConfig{
+		Issuer:     "auth_service",
+		ExpiresIn:  24 * time.Hour,
+		SignMethod: jwa.RS256,
+	}
+
+	jwtGenerator, err := auth.NewJWTManager(jwtConfig)
+	if err != nil {
+		panic("failed to initialize JWT generator: " + err.Error())
+	}
+
+	authService := service.NewAuthService(mc.Conn(), userRepo, rc, jwtGenerator)
 	authHandler := handler.NewAuthHandler(authService)
 
 	mux := http.NewServeMux()
